@@ -27,6 +27,7 @@ let lightbox = new SimpleLightbox('.gallery-list a', {
 let page = 1;
 let totalFindHits = 0;
 let query = '';
+let maksPages = 0;
 
 form.addEventListener('submit', submitForm);
 showMoreBtn.addEventListener('click', loadNextPage);
@@ -36,8 +37,8 @@ input.addEventListener('blur', () => (input.style.borderColor = ''));
 function submitForm(event) {
   event.preventDefault();
   query = input.value.trim();
-  totalFindHits = 40;
   page = 1;
+  showMoreBtn.style.display = 'none';
   if (!query) {
     showMessage('Please enter the text');
     form.reset();
@@ -51,8 +52,10 @@ function submitForm(event) {
     .then(data => {
       galleryList.innerHTML = '';
       renderImages(data.hits, lightbox);
-      showMoreBtn.style.display = 'block';
+      maksPages = Math.ceil(data.totalHits / 40);
+      totalFindHits = data.totalHits;
       form.reset();
+      showMoreBtn.style.display = maksPages < 2 ? 'none' : 'block';
     })
     .catch(() => {
       showMessage(
@@ -68,20 +71,19 @@ function loadNextPage() {
   loaderBottom.style.display = 'block';
   showMoreBtn.style.display = 'none';
   page += 1;
-  totalFindHits += 40;
+
   sendRequest(query, page)
     .then(data => {
-      const maksPages = Math.ceil(data.totalHits / 40);
+      renderImages(data.hits, lightbox);
+      maksPages = Math.ceil(data.totalHits / 40);
       if (page >= maksPages) {
-        renderImages(data.hits, lightbox);
         showMessageBell(
           "We're sorry, but you've reached the end of search results"
         );
         showMoreBtn.style.display = 'none';
-        page = 1;
-        return;
+      } else {
+        showMoreBtn.style.display = 'block';
       }
-      renderImages(data.hits, lightbox);
       const galleryItem = document.querySelector('.gallery-list .gallery-item');
       if (galleryItem) {
         const cardHeight = galleryItem.getBoundingClientRect().height || 0;
@@ -96,7 +98,6 @@ function loadNextPage() {
     })
     .finally(() => {
       loaderBottom.style.display = 'none';
-      showMoreBtn.style.display = 'block';
     });
 }
 
