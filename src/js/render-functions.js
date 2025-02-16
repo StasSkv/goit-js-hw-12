@@ -25,7 +25,6 @@ export function renderImages(images, lightbox) {
     })
     .join('');
   const list = document.querySelector('.gallery-list');
-  list.innerHTML = '';
   list.insertAdjacentHTML('beforeend', newList);
   lightbox.refresh();
 }
